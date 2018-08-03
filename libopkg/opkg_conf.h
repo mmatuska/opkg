@@ -89,6 +89,7 @@ struct opkg_conf {
 	int size;
 	int download_only;
 	char *cache;
+	char *chroot;
 
 	/* proxy options */
 	char *http_proxy;

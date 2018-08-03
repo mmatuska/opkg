@@ -21,6 +21,7 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <unistd.h>
 #include <getopt.h>
 #include <fnmatch.h>
 
@@ -54,12 +55,14 @@ enum {
 	ARGS_OPT_FORCE_SIGNATURE,
 	ARGS_OPT_NO_CHECK_CERTIFICATE,
 	ARGS_OPT_SIZE,
+	ARGS_OPT_CHROOT,
 };
 
 static struct option long_options[] = {
 	{"query-all", 0, 0, 'A'},
 	{"autoremove", 0, 0, ARGS_OPT_AUTOREMOVE},
 	{"cache", 1, 0, ARGS_OPT_CACHE},
+	{"chroot", 1, 0, ARGS_OPT_CHROOT},
 	{"conf-file", 1, 0, 'f'},
 	{"conf", 1, 0, 'f'},
 	{"dest", 1, 0, 'd'},
@@ -162,6 +165,9 @@ static int args_parse(int argc, char *argv[])
 		case ARGS_OPT_CACHE:
 			free(conf->cache);
 			conf->cache = xstrdup(optarg);
+			break;
+		case ARGS_OPT_CHROOT:
+			conf->chroot = xstrdup(optarg);
 			break;
 		case ARGS_OPT_FORCE_MAINTAINER:
 			conf->force_maintainer = 1;
@@ -311,6 +317,7 @@ static void usage()
 	    ("\t-f <conf_file>		Use <conf_file> as the opkg configuration file\n");
 	printf("\t--conf <conf_file>\n");
 	printf("\t--cache <directory>	Use a package cache\n");
+	printf("\t--chroot <directory>	Run in a chroot environment\n");
 	printf
 	    ("\t-d <dest_name>		Use <dest_name> as the the root directory for\n");
 	printf
@@ -393,6 +400,11 @@ int main(int argc, char *argv[])
 	}
 
 	cmd_name = argv[opts++];
+
+	if (conf->chroot && chroot(conf->chroot)) {
+		fprintf(stderr, "Chroot failed\n");
+		exit(1);
+	}
 
 	if (!strcmp(cmd_name, "install") ||
 	    !strcmp(cmd_name, "print-architecture") ||
